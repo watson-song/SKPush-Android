@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">SPush</string>
+    <string name="dummy_button">ONLINE USERS</string>
+    <string name="fullscreen_button">Full</string>
+    <string name="dummy_content">SCALA\nPUSH</string>
+
+    <string name="remote_service_connected">Remote service connected</string>
+    <string name="remote_service_disconnected">Remote service disconnected</string>
+    
+    <string name="remote_service_started">Remote service started</string>
+    <string name="notification_new_message">New Message !!!</string>
+    <string name="remote_service_stopped">Remote service stoped</string>
+
+</resources>
