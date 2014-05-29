@@ -13,6 +13,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.graphics.BitmapFactory;
 import android.media.RingtoneManager;
 import android.os.Handler;
 import android.os.IBinder;
@@ -153,20 +154,33 @@ public class ExchangeService extends Service {
         Notification.Builder builder = new Notification.Builder(this).setContentTitle(charSequence).setSmallIcon(R.drawable.ic_launcher).setContentIntent(contentIntent);
         switch(id) {
         case REMOTE_SERVICE_STARTED_NOTIFICATION:
-        	builder.setTicker(charSequence).setContentText(msg);
+        	builder.setTicker(charSequence).setOngoing(true).setContentText(msg);
         	break;
         case NEW_MESSAGE_NOTIFICATION:
         	try {
     			JSONObject json = new JSONObject(msg);
     			String from = "Server";
     			String content = msg;
+    			String tag = null;
     			if(json.has("from")) {
     				from = json.getString("from");
+    			}
+    			if(json.has("tag")) {
+    				tag = json.getString("tag");
     			}
     			if(json.has("data")) {
     				content = json.getString("data");
     			}
     			builder.setContentText(from+": "+content).setTicker(charSequence+"\n"+from+": "+content);
+    			if(tag!=null) {
+    				if(tag.startsWith("/global")) {
+    					builder.setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.ic_profile_system));
+    				}else {
+    					builder.setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.ic_profile_group));
+    				}
+    			}else {
+    				builder.setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.ic_profile_private));
+    			}
     		} catch (JSONException e) {
     			e.printStackTrace();
     			builder.setContentText(msg).setTicker(charSequence+"\n"+msg);

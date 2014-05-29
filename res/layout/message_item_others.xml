@@ -9,13 +9,29 @@
         android:layout_width="32dp"
         android:layout_height="32dp"
         android:adjustViewBounds="true"
+        android:layout_alignTop="@+id/textView_content"
         android:onClick="onProfileClicked"
         android:scaleType="centerCrop"
         android:src="@drawable/ic_profile_private" >
     </ImageView>
 
-    <RelativeLayout 
-        android:id="@+id/relativeLayout_container"
+    <TextView
+        android:id="@+id/textView_username"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/textView_content"
+        android:layout_marginRight="10dp"
+    	android:onClick="onUsernameClicked"
+    	android:layout_marginLeft="10dp"
+    	android:clickable="true"
+        android:text="Username" />
+    
+    <TextView
+        android:id="@+id/textView_content"
+        android:textSize="16sp"
+        android:textColor="#ff000000"
+        android:text="Message content" 
+        android:layout_below="@+id/textView_username"
         android:layout_toRightOf="@+id/imageView_profile"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -23,36 +39,15 @@
         android:paddingBottom="10dp"
         android:paddingLeft="25dp"
         android:paddingRight="25dp"
-        android:background="@drawable/bubble_arrow_left">
-
-        <TextView
-            android:id="@+id/textView_username"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginRight="10dp"
-        	android:layout_centerVertical="true"
-        	android:onClick="onUsernameClicked"
-        	android:clickable="true"
-            android:text="Username" />
-        
-        <TextView
-            android:id="@+id/textView_content"
-            android:layout_toRightOf="@+id/textView_username"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-        	android:layout_centerVertical="true"
-            android:textSize="16sp"
-            android:textColor="#ff000000"
-            android:text="Message content" />
-
-    </RelativeLayout>
+        android:background="@drawable/bubble_arrow_left"/>
     
     <TextView
         android:id="@+id/textView_time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignRight="@+id/relativeLayout_container"
-        android:layout_below="@+id/relativeLayout_container"
+        android:layout_alignRight="@+id/textView_content"
+        android:gravity="right"
+        android:layout_below="@+id/textView_content"
         android:text="Time" />
     
 </RelativeLayout>

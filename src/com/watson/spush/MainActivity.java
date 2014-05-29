@@ -7,6 +7,7 @@ import java.util.HashMap;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -23,6 +24,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -220,7 +222,7 @@ public class MainActivity extends Activity {
 		mConnectionCallbackText = (TextView)findViewById(R.id.connection_state_textView);
 		mHeartBeatingText = (TextView)findViewById(R.id.heartbeating_textView);
 		mHostNameText = (TextView)findViewById(R.id.editText_hostname);
-		mHostNameText.setText("172.30.86.29");
+//		mHostNameText.setText("172.30.86.29");
 		mPortText = (TextView)findViewById(R.id.editText_port);
 		mSendContentEditText = (EditText)findViewById(R.id.editText_send_content);
 		mSendTagEditText = (EditText)findViewById(R.id.editText_send_tag);
@@ -245,6 +247,7 @@ public class MainActivity extends Activity {
 		        esIntent.putExtra("host_name", mHostNameText.getText().toString());
 		        esIntent.putExtra("port", Integer.parseInt(mPortText.getText().toString()));
 		        startService(esIntent);
+		        mSendTagEditText.setText("/global");
 			}
 		});
 		sendBtn = (Button)findViewById(R.id.button_send);
@@ -320,7 +323,9 @@ public class MainActivity extends Activity {
 		if(mService!=null) {
 			try {
 				Message msg;
-				if(tag.startsWith("/")) {
+				if(tag.equalsIgnoreCase(":api")) {
+					msg = Message.obtain(null, ExchangeService.MSG_PUSH_TO_SERVER, Constants.SKEP_COMMAND_REQUEST_API_CALL, 1, buildApiCallCommand(data, "GET"));
+				}else if(tag.startsWith("/")) {
 					msg = Message.obtain(null, ExchangeService.MSG_PUSH_TO_SERVER, Constants.SKEP_COMMAND_MSG_PUSH_OUT, 0, buildPushOutCommand(data, new String[]{tag}));
 				}else {
 					// for private msg transfer
@@ -380,6 +385,10 @@ public class MainActivity extends Activity {
 	
 	private String buildTransferCommand(String content, String tag) {
 		return "{\"data\":\""+content+"\",\"to\":\""+tag+"\"}";
+	}
+	
+	private String buildApiCallCommand(String uri, String method) {
+		return "{\"uri\":\""+uri+"\",\"method\":\""+method+"\"}";
 	}
 	
 	private String buildBindTagsCommand(String[] tags) {
@@ -527,12 +536,12 @@ public class MainActivity extends Activity {
 				content = json.getString("data");
 			}
 			if(json.has("timestamp")) {
-				time = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(new Date(json.getLong("timestamp")));
+				time = formatTime(new Date(json.getLong("timestamp")));
 			}
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			time = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(new Date());
+			time = formatTime(new Date());
 		}
 		((TextView)view.findViewById(R.id.textView_username)).setText(from);
 		((TextView)view.findViewById(R.id.textView_time)).setText(time);
@@ -548,12 +557,41 @@ public class MainActivity extends Activity {
 		}, 300);
 	}
 	
+	@SuppressLint("SimpleDateFormat")
+	@SuppressWarnings("deprecation")
+	private String formatTime(Date date) {
+		Date now = new Date();
+		int nowYear = now.getYear();
+		int nowMonth = now.getMonth();
+		int nowDay = now.getDate();
+		SimpleDateFormat dateFormater = null;
+		if(date.getYear()==nowYear&&date.getMonth()==nowMonth) {
+			int dayGap = nowDay - date.getDate();
+			switch(dayGap) {
+			case 0:
+				return new SimpleDateFormat("HH:mm:ss").format(date);
+			case 1:
+				return "昨天 "+new SimpleDateFormat("HH:mm:ss").format(date);
+			case 2:
+				return "前天 "+new SimpleDateFormat("HH:mm:ss").format(date);
+			case 3:
+				return "大前天 "+new SimpleDateFormat("HH:mm:ss").format(date);
+				default:
+					dateFormater = new SimpleDateFormat("MM/dd HH:mm:ss");
+					break;
+			}
+		}else{
+			dateFormater = new SimpleDateFormat("MM/dd HH:mm:ss");
+		}
+		return dateFormater.format(date);
+	}
+	
 	private void createGoMessageItem(String tag, String data) {
 		if(data==null)return;
 		
 		View view = getLayoutInflater().inflate(R.layout.message_item_me, null);
 		((TextView)view.findViewById(R.id.textView_username)).setText(tag);
-		((TextView)view.findViewById(R.id.textView_time)).setText(new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(new Date()));
+		((TextView)view.findViewById(R.id.textView_time)).setText(formatTime(new Date()));
 		((TextView)view.findViewById(R.id.textView_content)).setText(data);
 		
 		mMessageContainer.addView(view, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
