@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="right"
+    android:paddingLeft="20dp">
+    
+    <ImageView
+        android:id="@+id/imageView_profile"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_alignParentRight="true"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_profile_me" >
+    </ImageView>
+    
+    <RelativeLayout 
+        android:id="@+id/relativeLayout_container"
+        android:layout_width="wrap_content"
+        android:layout_toLeftOf="@+id/imageView_profile"
+        android:layout_height="wrap_content"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:paddingRight="25dp"
+        android:paddingLeft="25dp"
+        android:background="@drawable/bubble_arrow_right">
+    
+	    <TextView
+	        android:id="@+id/textView_username"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:textColor="#0000ff"
+	        android:layout_alignParentRight="true"
+	        android:layout_centerVertical="true"
+	        android:layout_marginLeft="10dp"
+	        android:text="Username" />
+	    
+        <TextView
+            android:id="@+id/textView_content"
+            android:layout_width="wrap_content"
+            android:layout_toLeftOf="@+id/textView_username"
+	        android:layout_centerVertical="true"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:textColor="#ff000000"
+            android:text="Message content" />
+
+    </RelativeLayout>
+    
+    <TextView
+        android:id="@+id/textView_time"
+        android:layout_below="@+id/relativeLayout_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Time" />
+    
+    <View 
+        android:id="@+id/view"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@null"
+        android:layout_toLeftOf="@+id/relativeLayout_container"/>
+    
+</RelativeLayout>

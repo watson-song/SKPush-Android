@@ -1,5 +1,6 @@
 package com.watson.spush;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 
@@ -22,13 +23,14 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
-import android.view.Gravity;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.ScrollView;
@@ -84,7 +86,7 @@ public class MainActivity extends Activity {
     TextView mServiceCallbackText, mConnectionCallbackText, mHeartBeatingText, mHostNameText, mPortText;
    
     LinearLayout mMessageContainer;
-    EditText mSendContentEditText;
+    EditText mSendContentEditText, mSendTagEditText;
     Button connectBtn, sendBtn;
     
     /***
@@ -221,12 +223,13 @@ public class MainActivity extends Activity {
 		mHostNameText.setText("172.30.86.29");
 		mPortText = (TextView)findViewById(R.id.editText_port);
 		mSendContentEditText = (EditText)findViewById(R.id.editText_send_content);
+		mSendTagEditText = (EditText)findViewById(R.id.editText_send_tag);
 		mSendContentEditText.setOnEditorActionListener(new OnEditorActionListener() {
 			
 			@Override
 			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
 				if(event.getKeyCode()==KeyEvent.KEYCODE_ENTER) {
-					doSendMessage(v.getText().toString());
+					doSendMessage(mSendTagEditText.getText().toString(), mSendContentEditText.getText().toString());
 					return true;
 				}
 				return false;
@@ -248,7 +251,7 @@ public class MainActivity extends Activity {
 		sendBtn.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				doSendMessage(mSendContentEditText.getText().toString());
+				doSendMessage(mSendTagEditText.getText().toString(), mSendContentEditText.getText().toString());
 			}
 		});
 
@@ -313,13 +316,19 @@ public class MainActivity extends Activity {
 		doBindService();
 	}
 	
-	private void doSendMessage(String data) {
+	private void doSendMessage(String tag, String data) {
 		if(mService!=null) {
 			try {
-				Message msg = Message.obtain(null, ExchangeService.MSG_PUSH_TO_SERVER, Constants.SKEP_COMMAND_MSG_PUSH_OUT, 0, buildPushOutCommand(data, new String[]{"//"}));
+				Message msg;
+				if(tag.startsWith("/")) {
+					msg = Message.obtain(null, ExchangeService.MSG_PUSH_TO_SERVER, Constants.SKEP_COMMAND_MSG_PUSH_OUT, 0, buildPushOutCommand(data, new String[]{tag}));
+				}else {
+					// for private msg transfer
+					msg = Message.obtain(null, ExchangeService.MSG_PUSH_TO_SERVER, Constants.SKEP_COMMAND_MSG_TRANSFER, 0, buildTransferCommand(data, tag));
+				}
 				msg.replyTo = mMessenger;
 				mService.send(msg);
-				createGoMessageItem(data);
+				createGoMessageItem(tag, data);
 			} catch (RemoteException e) {
 				e.printStackTrace();
 				Toast.makeText(this, "Message Send failed -> service not binded.", Toast.LENGTH_LONG).show();
@@ -367,6 +376,10 @@ public class MainActivity extends Activity {
 		sb.append("]");
 		sb.append("}");
 		return sb.toString();
+	}
+	
+	private String buildTransferCommand(String content, String tag) {
+		return "{\"data\":\""+content+"\",\"to\":\""+tag+"\"}";
 	}
 	
 	private String buildBindTagsCommand(String[] tags) {
@@ -455,7 +468,7 @@ public class MainActivity extends Activity {
 		final EditText editText = new EditText(this);
 		switch (item.getItemId()) {
 		case R.id.bind_tags:
-			new AlertDialog.Builder(this).setTitle("Please type the tags, seprate by ','").setIcon(android.R.drawable.ic_dialog_info).setView(editText).setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+			new AlertDialog.Builder(this).setTitle("Please type the tags, seprate by ','").setMessage("Be careful, the tag will add prefix \"/group\" automatically").setIcon(android.R.drawable.ic_dialog_info).setView(editText).setPositiveButton("Ok", new DialogInterface.OnClickListener() {
 				
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
@@ -481,31 +494,51 @@ public class MainActivity extends Activity {
 	private void createComeMessageItem(String data) {
 		if(data==null)return;
 		
-		TextView textView = new TextView(this);
+		View view = getLayoutInflater().inflate(R.layout.message_item_others, null);
+		ImageView profileImageView = ((ImageView)view.findViewById(R.id.imageView_profile));
+		String from = "Server";
+		String content = data;
+		String tag = null;
+		String time = "";
 		try {
 			JSONObject json = new JSONObject(data);
-			String from = "Server";
-			String content = data;
-			String time = "";
+			Log.i("MainActivity - createComeMessageItem", data);
+			if(json.has("tag")) {
+				tag = json.getString("tag");
+				if(tag.startsWith("/global")) {
+					profileImageView.setImageResource(R.drawable.ic_profile_system);
+				}else if(tag.startsWith("/group")) {
+					profileImageView.setImageResource(R.drawable.ic_profile_group);
+					profileImageView.setImageResource(R.drawable.ic_profile_group);
+				}
+				profileImageView.setTag(tag);
+			}
 			if(json.has("from")) {
 				from = json.getString("from");
+				if("web".equalsIgnoreCase(from)) {
+					profileImageView.setImageResource(R.drawable.ic_profile_web);
+				}
+			}
+			//no tag means comes from private 
+			if(tag==null) {
+				profileImageView.setTag(from);
 			}
 			if(json.has("data")) {
 				content = json.getString("data");
 			}
 			if(json.has("timestamp")) {
-				time = new Date(json.getLong("timestamp")).toLocaleString();
+				time = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(new Date(json.getLong("timestamp")));
 			}
-			textView.setText(from+" -> "+content+"\n"+time);
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			textView.setText("Server -> "+data);
+			time = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(new Date());
 		}
-		textView.setTextColor(Color.WHITE);
-		textView.setTextSize(16);
-		textView.setPadding(0, 5, 0, 5);
-		mMessageContainer.addView(textView, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+		((TextView)view.findViewById(R.id.textView_username)).setText(from);
+		((TextView)view.findViewById(R.id.textView_time)).setText(time);
+		((TextView)view.findViewById(R.id.textView_content)).setText(content);
+		
+		mMessageContainer.addView(view, new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
 		mMessageContainer.postDelayed(new Runnable() {
 			
 			@Override
@@ -515,16 +548,15 @@ public class MainActivity extends Activity {
 		}, 300);
 	}
 	
-	private void createGoMessageItem(String data) {
+	private void createGoMessageItem(String tag, String data) {
 		if(data==null)return;
 		
-		TextView textView = new TextView(this);
-		textView.setText(data+" <- Me\n"+new Date().toLocaleString());
-		textView.setTextColor(Color.GRAY);
-		textView.setTextSize(16);
-		textView.setPadding(0, 5, 0, 5);
-		textView.setGravity(Gravity.RIGHT);
-		mMessageContainer.addView(textView, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+		View view = getLayoutInflater().inflate(R.layout.message_item_me, null);
+		((TextView)view.findViewById(R.id.textView_username)).setText(tag);
+		((TextView)view.findViewById(R.id.textView_time)).setText(new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(new Date()));
+		((TextView)view.findViewById(R.id.textView_content)).setText(data);
+		
+		mMessageContainer.addView(view, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 		mSendContentEditText.setText("");
 		mMessageContainer.postDelayed(new Runnable() {
 			
@@ -533,6 +565,16 @@ public class MainActivity extends Activity {
 				((ScrollView)findViewById(R.id.scrollView)).fullScroll(View.FOCUS_DOWN);
 			}
 		}, 300);
+	}
+	
+	/***
+	 * Used in other profile image on click event
+	 */
+	public void onProfileClicked(View v) {
+		mSendTagEditText.setText(v.getTag()!=null?(String)v.getTag():"/global");
+	}
+	public void onUsernameClicked(View v) {
+		mSendTagEditText.setText(((TextView)v).getText());
 	}
 	
 	/**

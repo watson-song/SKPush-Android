@@ -36,7 +36,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:dividerPadding="10dp"
+            android:dividerPadding="5dp"
             android:orientation="vertical"
             android:padding="10dp"
             android:showDividers="beginning" >
@@ -61,7 +61,6 @@
                     android:hint="Host Address"
                     android:ems="10" >
 
-                    <requestFocus />
                 </EditText>
 
                 <EditText
@@ -170,15 +169,15 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_marginTop="10dp"
-                android:layout_weight="1"
-                android:padding="10dp"
-                android:background="#40000000" >
+                android:layout_weight="1">
 
                 <LinearLayout
                     android:id="@+id/message_container"
-                    android:layout_width="match_parent"
+                    android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:animateLayoutChanges="true"
+					android:divider="@drawable/divider_vertical"
+					android:showDividers="middle"
                     android:orientation="vertical" >
                 </LinearLayout>
             </ScrollView>
@@ -187,22 +186,35 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
+                android:orientation="horizontal"
                 android:background="#80ffffff" >
+
+                <EditText
+                    android:id="@+id/editText_send_tag"
+                    android:layout_width="100dp"
+                    android:layout_height="wrap_content"
+                    android:hint="Tag"
+                    android:singleLine="true"
+                    android:text="/global"
+                    android:ems="10" />
 
                 <EditText
                     android:id="@+id/editText_send_content"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:imeActionLabel="Send"
+                    android:ems="10"
+                    android:hint="Message"
                     android:imeActionId="@+id/send_keyword_btn"
-                    android:ems="10" />
+                    android:imeActionLabel="Send" >
+                    
+                    <requestFocus />
+                </EditText>
 
                 <Button
                     android:id="@+id/button_send"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:enabled="false"
                     android:text="Send" />
 

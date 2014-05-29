@@ -2,7 +2,6 @@ package com.watson.spush.service;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 
 import org.json.JSONException;
